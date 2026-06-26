@@ -1,0 +1,13 @@
+ialglib.cpp: In function 'bool ialglib::_i_cmatrixgemmf(int, int, int, ap::complex, const ap::complex_2d_array&, int, int, int, const ap::complex_2d_array&, int, int, int, ap::complex, ap::complex_2d_array&, int, int)':
+ialglib.cpp:838: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp:843: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp:848: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp: In function 'bool ialglib::_i_cmatrixrighttrsmf(int, int, const ap::complex_2d_array&, int, int, bool, bool, int, ap::complex_2d_array&, int, int)':
+ialglib.cpp:918: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp:931: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp: In function 'bool ialglib::_i_cmatrixlefttrsmf(int, int, const ap::complex_2d_array&, int, int, bool, bool, int, ap::complex_2d_array&, int, int)':
+ialglib.cpp:1070: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp:1082: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp: In function 'bool ialglib::_i_cmatrixsyrkf(int, int, double, const ap::complex_2d_array&, int, int, int, double, ap::complex_2d_array&, int, int, bool)':
+ialglib.cpp:1230: warning: deprecated conversion from string constant to 'char*'
+ialglib.cpp:1238: warning: deprecated conversion from string constant to 'char*'

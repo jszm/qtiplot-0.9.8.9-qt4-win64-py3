@@ -1,0 +1,240 @@
+diff  C:/qtiplot-0.9.8.9/3rdparty/qwtplot3d/qwtplot3d.pro.org C:/qtiplot-0.9.8.9/3rdparty/qwtplot3d/qwtplot3d.pro
+27c27
+< DESTDIR  = lib
+---
+> DESTDIR  = ../../
+29,31c29,31
+< OBJECTS_DIR  = $$DESTDIR/tmp
+< RCC_DIR      = $$DESTDIR/tmp
+< MOC_DIR      = $$DESTDIR/tmp
+---
+> #OBJECTS_DIR  = $$DESTDIR/tmp
+> #RCC_DIR      = $$DESTDIR/tmp
+> #MOC_DIR      = $$DESTDIR/tmp
+35,36c35,36
+< INCLUDEPATH += ../libpng/
+< LIBS        += ../libpng/libpng.a
+---
+> INCLUDEPATH += c:/mingw/include
+> LIBS        += c:/mingw/bin/libpng3.dll
+diff  C:/qtiplot-0.9.8.9/build.conf.org C:/qtiplot-0.9.8.9/build.conf
+62c62
+< win32:QWT3D_LIBS = $$QTI_ROOT/3rdparty/qwtplot3d/lib/qwtplot3d.dll
+---
+> win32:QWT3D_LIBS = $$QTI_ROOT/qwtplot3d.dll
+70c70
+< LIBPNG_INCLUDEPATH = $$QTI_ROOT/3rdparty/libpng/
+---
+> LIBPNG_INCLUDEPATH = c:/mingw/include
+72c72
+< LIBPNG_LIBS = $$QTI_ROOT/3rdparty/libpng/libpng.a
+---
+> LIBPNG_LIBS = c:/mingw/bin/libpng3.dll
+92c92
+< ALGLIB_INCLUDEPATH = $$QTI_ROOT/3rdparty/alglib/
+---
+> ALGLIB_INCLUDEPATH = $$QTI_ROOT/3rdparty/alglib/out
+94c94
+< ALGLIB_LIBS = $$QTI_ROOT/3rdparty/alglib/libalglib.a
+---
+> ALGLIB_LIBS = $$QTI_ROOT/3rdparty/alglib/out/libalglib.a
+134c134
+<   #DEFINES         += QTIPLOT_DEMO
+---
+>   DEFINES         += QTIPLOT_PRO
+137c137
+<   #CONFIG          += CustomInstall
+---
+>   CONFIG          += CustomInstall
+146a147
+>   
+diff  C:/qtiplot-0.9.8.9/qtiplot.pro.org C:/qtiplot-0.9.8.9/qtiplot.pro
+3,7c3,10
+< SUBDIRS = fitPlugins \
+< 	    manual \
+< 	    3rdparty/qwt \
+< 		3rdparty/qwtplot3d \
+<         qtiplot
+---
+> CONFIG	+= ordered
+> 
+> SUBDIRS = 	fitPlugins \
+> 			3rdparty/qwt \
+> 			3rdparty/qwtplot3d \
+> 			qtiplot/exportEMF.pro \
+> 			qtiplot/importOPJ.pro \
+> 			qtiplot/qtiplot.pro
+diff  C:/qtiplot-0.9.8.9/qtiplot/qtiplot.pro.org C:/qtiplot-0.9.8.9/qtiplot/qtiplot.pro
+1d0
+< TARGET   = qtiplot
+49c48
+< 	win32: INSTALLBASE = C:/QtiPlot
+---
+> 	win32: INSTALLBASE = C:/qtiplot-0.9.8.9
+77d75
+< DESTDIR        = ./
+234a233,244
+> 
+> ###############################################################
+> ###############################################################
+> ###############################################################
+> 
+> TARGET		=	qtiplot
+> DESTDIR		=	../
+> LIBS		+=	../tmp/qtiplot/libFreeSoftwareQtiPlotExportEMF.a \
+> 				../tmp/qtiplot/libFreeSoftwareQtiPlotImportOPJ.a
+> 
+> include(src/plugins/exportEMF/exportEMF.pri)
+> include(src/plugins/OriginPlugin/OriginPlugin.pri)
+\ No newline at end of file
+diff  C:/qtiplot-0.9.8.9/qtiplot/src/core/ApplicationWindow.cpp.org C:/qtiplot-0.9.8.9/qtiplot/src/core/ApplicationWindow.cpp
+4a5
+> 	Copyright © 2011 Stephan Zevenhuizen
+9833c9834
+< 		text += "<h3>" + tr("Released") + ": " + QString(release_date) + "</h3>";
+---
+> 		text += "<h3>" + QString("CMI - Universiteit Utrecht release") + "</h3>";
+diff  C:/qtiplot-0.9.8.9/qtiplot/src/core/main.cpp.org C:/qtiplot-0.9.8.9/qtiplot/src/core/main.cpp
+4a5
+> 	Copyright © 2011 Stephan Zevenhuizen
+133c134
+< #ifdef QTIPLOT_PRO
+---
+> #ifdef QTIPLOT_CLOSED_SOURCE
+142a144,147
+>  
+>  	Q_IMPORT_PLUGIN(FreeSoftwareQtiPlotExportEMF);
+> 	Q_IMPORT_PLUGIN(FreeSoftwareQtiPlotImportOPJ);
+> 
+diff  C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin1/importOPJ.cpp.org C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin1/importOPJ.cpp
+4a5
+> 	Copyright © 2011 Stephan Zevenhuizen
+88c89
+< QString posixTimeToString(ptime pt)
+---
+> QString cTimeToString(time_t ct)
+89a91
+> 	ptime pt = from_time_t(ct);
+200,201c202,203
+< 			parent[sib]->setBirthDate(posixTimeToString(sib->creationDate));
+< 			parent[sib]->setModificationDate(posixTimeToString(sib->modificationDate));
+---
+> 			parent[sib]->setBirthDate(cTimeToString(sib->creationDate));
+> 			parent[sib]->setModificationDate(cTimeToString(sib->modificationDate));
+249c251
+< 		table->setBirthDate(posixTimeToString(spread.creationDate));
+---
+> 		table->setBirthDate(cTimeToString(spread.creationDate));
+293c295
+< 				if (i >= maxrows)
+---
+> 				if (i >= static_cast<unsigned int>(maxrows))
+345a348,349
+> 					default:
+> 						f = 0;
+510,511c514,516
+< 		int columnCount = matrix.columnCount;
+< 		int rowCount = matrix.rowCount;
+---
+> 		Origin::MatrixSheet sheet = matrix.sheets[matrix.activeSheet];
+> 		int columnCount = sheet.columnCount;
+> 		int rowCount = sheet.rowCount;
+524c529
+< 		Matrix->setCoordinates(matrix.coordinates[3], matrix.coordinates[1], matrix.coordinates[2], matrix.coordinates[0]);
+---
+> 		Matrix->setCoordinates(sheet.coordinates[3], sheet.coordinates[1], sheet.coordinates[2], sheet.coordinates[0]);
+526c531
+< 		Matrix->setBirthDate(posixTimeToString(matrix.creationDate));
+---
+> 		Matrix->setBirthDate(cTimeToString(matrix.creationDate));
+529,531c534,536
+< 		Matrix->setFormula(matrix.command.c_str());
+< 		Matrix->setColumnsWidth(matrix.width * QtiPlot_scaling_factor);
+< 		if(matrix.view == Origin::Matrix::ImageView){
+---
+> 		Matrix->setFormula(sheet.command.c_str());
+> 		Matrix->setColumnsWidth(sheet.width * QtiPlot_scaling_factor);
+> 		if(sheet.view == Origin::MatrixSheet::ImageView){
+536c541
+< 				Origin::ColorMap colorMap = matrix.colorMap;
+---
+> 				Origin::ColorMap colorMap = sheet.colorMap;
+545c550
+< 		vector<double>* data = &matrix.data;
+---
+> 		vector<double>* data = &sheet.data;
+557c562
+< 		switch(matrix.valueTypeSpecification){
+---
+> 		switch(sheet.valueTypeSpecification){
+560c565
+< 				prec = matrix.decimalPlaces;
+---
+> 				prec = sheet.decimalPlaces;
+564c569
+< 				prec = matrix.decimalPlaces;
+---
+> 				prec = sheet.decimalPlaces;
+569c574
+< 				prec = matrix.significantDigits;
+---
+> 				prec = sheet.significantDigits;
+624c629
+< 		note->setBirthDate(posixTimeToString(_note.creationDate));
+---
+> 		note->setBirthDate(cTimeToString(_note.creationDate));
+676c681
+< 		ml->setBirthDate(posixTimeToString(_graph.creationDate));
+---
+> 		ml->setBirthDate(cTimeToString(_graph.creationDate));
+1324c1329
+< 						!(ticks[i].hidden),	ColorBox::defaultColor(formats[i].color), format, prec,
+---
+> 						ticks[i].showMajorLabels, ColorBox::defaultColor(formats[i].color), format, prec,
+1411a1417,1418
+> 					default:
+> 						fw = new RectangleWidget(graph);
+1619c1626
+< 					ImageProfilesTool *tool = new ImageProfilesTool(mw, graph, sp->matrix(), ht, vt, mw->displayInfoLineEdit(), SLOT(setText(const QString&)));
+---
+> 					ImageProfilesTool *tool = new ImageProfilesTool(mw, graph, sp->matrix(), ht, vt);
+1675d1681
+< 		sp->setRange(vmin, vmax);
+1774c1780
+< 		plot->setBirthDate(posixTimeToString(_graph.creationDate));
+---
+> 		plot->setBirthDate(cTimeToString(_graph.creationDate));
+1921c1927
+< 					plot->setDataColorMap(QwtLinearColorMap(color, color));
+---
+> 					plot->setDataColorMap(LinearColorMap(color, color));
+1961c1967
+< 						plot->setDataColorMap(QwtLinearColorMap(color, color));
+---
+> 						plot->setDataColorMap(LinearColorMap(color, color));
+2321c2327
+< QwtLinearColorMap ImportOPJ::qwtColorMap(const Origin::ColorMap& colorMap)
+---
+> LinearColorMap ImportOPJ::qwtColorMap(const Origin::ColorMap& colorMap)
+2331,2332c2337,2338
+< 	QwtLinearColorMap qwt_color_map = QwtLinearColorMap(color1, color2);
+< 	qwt_color_map.setMode(QwtLinearColorMap::FixedColors);
+---
+> 	LinearColorMap qwt_color_map = LinearColorMap(color1, color2);
+> 	qwt_color_map.setMode(LinearColorMap::FixedColors);
+diff  C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin1/importOPJ.h.org C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin1/importOPJ.h
+4a5
+> 	Copyright © 2011 Stephan Zevenhuizen
+58c59
+< 	QwtLinearColorMap qwtColorMap(const Origin::ColorMap& colorMap);
+---
+> 	LinearColorMap qwtColorMap(const Origin::ColorMap& colorMap);
+diff  C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin2/Origin750Parser.cpp.org C:/qtiplot-0.9.8.9/qtiplot/src/plugins/OriginPlugin/liborigin2/Origin750Parser.cpp
+3a4
+> 	Copyright © 2011 Stephan Zevenhuizen
+2404,2405c2405,2406
+< 
+< 	readProjectTreeFolder(projectTree.begin());
+---
+> 	tree<ProjectNode>::iterator top = projectTree.insert(projectTree.begin(), ProjectNode());
+> 	readProjectTreeFolder(top);

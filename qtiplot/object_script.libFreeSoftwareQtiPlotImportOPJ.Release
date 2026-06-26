@@ -1,0 +1,15 @@
+CREATE ..\tmp\qtiplot\libFreeSoftwareQtiPlotImportOPJ.a
+ADDMOD ..\tmp\qtiplot\OriginPlugin.o
+ADDMOD ..\tmp\qtiplot\importOPJ.o
+ADDMOD ..\tmp\qtiplot\OriginFile.o
+ADDMOD ..\tmp\qtiplot\OriginParser.o
+ADDMOD ..\tmp\qtiplot\Origin410Parser.o
+ADDMOD ..\tmp\qtiplot\Origin500Parser.o
+ADDMOD ..\tmp\qtiplot\Origin610Parser.o
+ADDMOD ..\tmp\qtiplot\Origin700Parser.o
+ADDMOD ..\tmp\qtiplot\Origin750Parser.o
+ADDMOD ..\tmp\qtiplot\Origin800Parser.o
+ADDMOD ..\tmp\qtiplot\Origin810Parser.o
+ADDMOD ..\tmp\qtiplot\Origin850Parser.o
+ADDMOD ..\tmp\qtiplot\moc_OriginPlugin.o
+SAVE
