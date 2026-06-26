@@ -26,6 +26,12 @@ The intended binary release asset is:
 qtiplot-0.9.8.9-qt4-win64-py3-portable.7z
 ```
 
+Initial release:
+
+```text
+https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3/releases/tag/v0.9.8.9-qt4-win64-py3
+```
+
 After building `qtiplot.exe`, regenerate the portable folder and archive with:
 
 ```powershell
