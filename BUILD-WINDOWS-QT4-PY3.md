@@ -1,6 +1,6 @@
 # QtiPlot 0.9.8.9 Qt4 Win64 Python 3 Build
 
-Date: 2026-06-26
+Date: 2026-06-27
 
 This is an alternate route for avoiding a Qt migration while still moving the
 public QtiPlot 0.9.8.9 line to a 64-bit Windows build with Python 3 scripting.
@@ -80,6 +80,10 @@ Important: after changing `SCRIPTING_LANGS` or Python-related defines, do a
 clean rebuild. A partial rebuild produced stale object layout and startup
 crashes during the probe.
 
+Also do a clean rebuild after changing `MdiSubWindow` virtual functions or data
+layout. Derived window classes and SIP objects can otherwise retain stale vtable
+or object-layout assumptions.
+
 ## Runtime Verification
 
 Use the same runtime environment shape as the probe:
@@ -154,9 +158,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\make_qt4_x64_py3_porta
 Current local artifact:
 
 ```text
+Release tag: v0.9.8.9-qt4-win64-py3-r2
 dist\qtiplot-0.9.8.9-qt4-win64-py3-portable.7z
-SHA256: DCF5A5690FB177AAF2B42E3927C959F085263E781D4C76C5C54D30BCAA9C00AD
-Size:   33,081,140 bytes
+SHA256: 4121BE8266BB24211EA2467F90E05403F071A456813F3036D73C85D773DC34B2
+Size:   33,083,269 bytes
 ```
 
 The portable folder includes:
@@ -188,6 +193,27 @@ GUI start from dist-dir:          stayed alive
 plain EXE start from source-dir:  stayed alive
 plain EXE start from dist-dir:    stayed alive
 extracted 7z embedded smoke:      exit 0
+```
+
+## 2026-06-27 MDI Table Resize Fix
+
+Symptom: after loading CSV data into a table, the table MDI window could be
+moved and programmatically resized, but border dragging did not enter resize
+mode. Cursor sweeps over all borders stayed at `ArrowCursor`.
+
+Fix: `MdiSubWindow` now enables mouse tracking and intercepts MDI frame mouse
+events at `event()` level. If Qt4's built-in MDI hit-test misses a frame edge,
+QtiPlot applies its own edge cursor and drag-resize fallback. The resize state
+is stored outside the C++ object layout to avoid breaking the existing SIP/Python
+bindings.
+
+Regression checks used:
+
+```text
+qtiplot_newtable_probe_oneline.py: exit 0
+qtiplot_csv_resize_probe_oneline.py: resize_changed=True
+qtiplot_mdi_resize_cursor_sweep_oneline.py: top/bottom/left/right/corners show resize cursors
+qtiplot_mdi_direct_move_resize_probe_oneline.py: cursor_at_resize=8, resize_changed=True
 ```
 
 ## Publishing Recommendation

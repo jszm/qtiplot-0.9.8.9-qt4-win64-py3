@@ -33,6 +33,7 @@
 
 class QEvent;
 class QCloseEvent;
+class QMouseEvent;
 class QString;
 class Folder;
 class ApplicationWindow;
@@ -123,6 +124,9 @@ public:
 	 */
 	void closeEvent( QCloseEvent *);
 	void resizeEvent( QResizeEvent* );
+	void mousePressEvent(QMouseEvent *);
+	void mouseMoveEvent(QMouseEvent *);
+	void mouseReleaseEvent(QMouseEvent *);
 
 	//! Toggle the "ask on close" flag
 	void askOnCloseEvent(bool ask){d_confirm_close = ask;};
@@ -172,6 +176,7 @@ signals:
 	void showContextMenu();
 
 protected:
+	virtual bool event(QEvent *event);
 	//! Catches status changes
 	virtual void changeEvent(QEvent *event);
 
@@ -179,6 +184,9 @@ private:
 	//! Used to parse ASCII files with carriage return ('\r') endline.
 	static QString parseMacAsciiFile(const QString& fname, const QString &commentString,
                         	 int ignoreFirstLines, int maxRows, int& rows);
+	enum ResizeEdge{NoEdge = 0, LeftEdge = 1, RightEdge = 2, TopEdge = 4, BottomEdge = 8};
+	int resizeEdgesAt(const QPoint& pos) const;
+	void updateResizeCursor(int edges);
     //! Set caption according to current CaptionPolicy, name and label
 	void updateCaption();
 	//!Pointer to the application window
@@ -201,7 +209,7 @@ private:
 	bool d_confirm_close;
 	//! The creation date
 	QString d_birthdate;
-    //! Stores the size the window had before a change state event to minimized.
+	//! Stores the size the window had before a change state event to minimized.
 	QSize d_min_restore_size;
 };
 

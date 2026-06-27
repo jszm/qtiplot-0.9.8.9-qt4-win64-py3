@@ -34,6 +34,9 @@
 #include <QMessageBox>
 #include <QEvent>
 #include <QCloseEvent>
+#include <QMouseEvent>
+#include <QHash>
+#include <QStyle>
 #include <QString>
 #include <QDateTime>
 #include <QMenu>
@@ -45,6 +48,25 @@
 
 using std::ifstream;
 using std::string;
+
+namespace {
+struct ResizeState
+{
+	ResizeState() : resizing(false), edges(0) {}
+
+	bool resizing;
+	int edges;
+	QPoint startGlobal;
+	QRect startGeometry;
+};
+
+QHash<const MdiSubWindow *, ResizeState> resizeStates;
+
+ResizeState& resizeState(const MdiSubWindow *window)
+{
+	return resizeStates[window];
+}
+}
 
 MdiSubWindow::MdiSubWindow(const QString& label, ApplicationWindow *app, const QString& name, Qt::WFlags f):
 		QMdiSubWindow (app, f),
@@ -59,6 +81,7 @@ MdiSubWindow::MdiSubWindow(const QString& label, ApplicationWindow *app, const Q
 {
 	setObjectName(name);
 	setAttribute(Qt::WA_DeleteOnClose);
+	setMouseTracking(true);
 	setLocale(app->locale());
 	if (d_folder)
 		d_folder->addWindow(this);
@@ -94,6 +117,187 @@ void MdiSubWindow::resizeEvent( QResizeEvent* e )
 {
 	emit resizedWindow(this);
 	QMdiSubWindow::resizeEvent( e );
+}
+
+bool MdiSubWindow::event(QEvent *event)
+{
+	if (event->type() == QEvent::MouseButtonPress){
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		if (mouseEvent->button() == Qt::LeftButton && resizeEdgesAt(mouseEvent->pos()) != NoEdge){
+			mousePressEvent(mouseEvent);
+			return true;
+		}
+	} else if (event->type() == QEvent::MouseMove){
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		ResizeState &state = resizeState(this);
+		if (state.resizing || (!(mouseEvent->buttons() & Qt::LeftButton) && resizeEdgesAt(mouseEvent->pos()) != NoEdge)){
+			mouseMoveEvent(mouseEvent);
+			return true;
+		}
+	} else if (event->type() == QEvent::MouseButtonRelease){
+		QMouseEvent *mouseEvent = static_cast<QMouseEvent *>(event);
+		ResizeState &state = resizeState(this);
+		if (state.resizing && mouseEvent->button() == Qt::LeftButton){
+			mouseReleaseEvent(mouseEvent);
+			return true;
+		}
+	}
+
+	return QMdiSubWindow::event(event);
+}
+
+int MdiSubWindow::resizeEdgesAt(const QPoint& pos) const
+{
+	if (!parentWidget() || isMaximized() || isMinimized() || isShaded() ||
+		(windowFlags() & Qt::MSWindowsFixedSizeDialogHint))
+		return NoEdge;
+
+	int margin = style()->pixelMetric(QStyle::PM_MdiSubWindowFrameWidth, 0, this);
+	margin = qMax(margin, 6);
+
+	int edges = NoEdge;
+	if (pos.x() <= margin)
+		edges |= LeftEdge;
+	else if (pos.x() >= width() - margin)
+		edges |= RightEdge;
+
+	if (pos.y() <= margin)
+		edges |= TopEdge;
+	else if (pos.y() >= height() - margin)
+		edges |= BottomEdge;
+
+	return edges;
+}
+
+void MdiSubWindow::updateResizeCursor(int edges)
+{
+	if ((edges & LeftEdge && edges & TopEdge) || (edges & RightEdge && edges & BottomEdge))
+		setCursor(Qt::SizeFDiagCursor);
+	else if ((edges & RightEdge && edges & TopEdge) || (edges & LeftEdge && edges & BottomEdge))
+		setCursor(Qt::SizeBDiagCursor);
+	else if (edges & (LeftEdge | RightEdge))
+		setCursor(Qt::SizeHorCursor);
+	else if (edges & (TopEdge | BottomEdge))
+		setCursor(Qt::SizeVerCursor);
+	else
+		unsetCursor();
+}
+
+void MdiSubWindow::mousePressEvent(QMouseEvent *e)
+{
+	if (e->button() == Qt::LeftButton){
+		int edges = resizeEdgesAt(e->pos());
+		if (edges != NoEdge){
+			ResizeState &state = resizeState(this);
+			state.resizing = true;
+			state.edges = edges;
+			state.startGlobal = e->globalPos();
+			state.startGeometry = geometry();
+			updateResizeCursor(edges);
+			e->accept();
+			return;
+		}
+	}
+
+	QMdiSubWindow::mousePressEvent(e);
+}
+
+void MdiSubWindow::mouseMoveEvent(QMouseEvent *e)
+{
+	ResizeState &state = resizeState(this);
+	if (state.resizing){
+		QPoint delta = e->globalPos() - state.startGlobal;
+		int x = state.startGeometry.x();
+		int y = state.startGeometry.y();
+		int w = state.startGeometry.width();
+		int h = state.startGeometry.height();
+
+		if (state.edges & LeftEdge){
+			x += delta.x();
+			w -= delta.x();
+		} else if (state.edges & RightEdge)
+			w += delta.x();
+
+		if (state.edges & TopEdge){
+			y += delta.y();
+			h -= delta.y();
+		} else if (state.edges & BottomEdge)
+			h += delta.y();
+
+		QSize minSize = minimumSize().expandedTo(minimumSizeHint());
+		QSize maxSize = maximumSize();
+		int minW = qMax(1, minSize.width());
+		int minH = qMax(1, minSize.height());
+		int maxW = maxSize.width();
+		int maxH = maxSize.height();
+
+		if (w < minW){
+			if (state.edges & LeftEdge)
+				x = state.startGeometry.x() + state.startGeometry.width() - minW;
+			w = minW;
+		} else if (w > maxW){
+			if (state.edges & LeftEdge)
+				x = state.startGeometry.x() + state.startGeometry.width() - maxW;
+			w = maxW;
+		}
+
+		if (h < minH){
+			if (state.edges & TopEdge)
+				y = state.startGeometry.y() + state.startGeometry.height() - minH;
+			h = minH;
+		} else if (h > maxH){
+			if (state.edges & TopEdge)
+				y = state.startGeometry.y() + state.startGeometry.height() - maxH;
+			h = maxH;
+		}
+
+		if (QWidget *p = parentWidget()){
+			QRect parentRect = p->rect();
+			if (x < 0){
+				w += x;
+				x = 0;
+			}
+			if (y < 0){
+				h += y;
+				y = 0;
+			}
+			if (x + w > parentRect.width())
+				w = parentRect.width() - x;
+			if (y + h > parentRect.height())
+				h = parentRect.height() - y;
+			w = qMax(w, minW);
+			h = qMax(h, minH);
+		}
+
+		setGeometry(x, y, w, h);
+		e->accept();
+		return;
+	}
+
+	if (!(e->buttons() & Qt::LeftButton)){
+		int edges = resizeEdgesAt(e->pos());
+		if (edges != NoEdge){
+			updateResizeCursor(edges);
+			e->accept();
+			return;
+		}
+	}
+
+	QMdiSubWindow::mouseMoveEvent(e);
+}
+
+void MdiSubWindow::mouseReleaseEvent(QMouseEvent *e)
+{
+	ResizeState &state = resizeState(this);
+	if (state.resizing && e->button() == Qt::LeftButton){
+		state.resizing = false;
+		state.edges = NoEdge;
+		updateResizeCursor(resizeEdgesAt(e->pos()));
+		e->accept();
+		return;
+	}
+
+	QMdiSubWindow::mouseReleaseEvent(e);
 }
 
 void MdiSubWindow::closeEvent( QCloseEvent *e )

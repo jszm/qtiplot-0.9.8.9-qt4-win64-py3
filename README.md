@@ -32,6 +32,12 @@ Initial release:
 https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3/releases/tag/v0.9.8.9-qt4-win64-py3
 ```
 
+Current resize-fix refresh:
+
+```text
+https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3/releases/tag/v0.9.8.9-qt4-win64-py3-r2
+```
+
 After building `qtiplot.exe`, regenerate the portable folder and archive with:
 
 ```powershell
@@ -40,6 +46,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools\make_qt4_x64_py3_porta
 
 The portable package stages the Qt4 DLLs, Python 3.7 runtime, PyQt4/SIP runtime,
 manual, translations, and fit plugins beside the application.
+
+Current local refresh:
+
+```text
+SHA256: 4121BE8266BB24211EA2467F90E05403F071A456813F3036D73C85D773DC34B2
+Size:   33,083,269 bytes
+```
 
 ## Status
 
@@ -50,6 +63,7 @@ The local proof build passed these clean-environment checks:
 - embedded Python smoke from the source build folder
 - embedded Python smoke from the portable folder
 - embedded Python smoke after extracting the 7z archive
+- MDI table border resize after CSV import
 
 Verified Python marker:
 
@@ -59,6 +73,10 @@ pyqt=4.12.3
 qt=4.8.7
 qti_app=True
 ```
+
+The 2026-06-27 refresh fixes a Qt4 MDI edge hit-test regression where table
+windows could be moved and programmatically resized but not resized by dragging
+the window border.
 
 ## License
 
