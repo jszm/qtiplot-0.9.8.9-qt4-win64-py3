@@ -1,0 +1,1 @@
+import os, sys; from PyQt4 import QtCore, QtGui; import qti; open(os.path.join(os.getcwd(), "qtiplot_py3_smoke.out"), "w").write("python=%d.%d.%d\npyqt=%s\nqt=%s\nqti_app=%s\n" % (sys.version_info[:3] + (QtCore.PYQT_VERSION_STR, QtCore.QT_VERSION_STR, bool(getattr(qti, "app", None)))))

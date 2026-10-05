@@ -1,0 +1,16 @@
+--- a/qtiplot/src/lib/src/ColorMapEditor.cpp
++++ b/qtiplot/src/lib/src/ColorMapEditor.cpp
+@@
+ 	#ifdef Q_CC_MSVC
+ 		it->setFlags(it->flags() & (~Qt::ItemIsEditable));
+ 	#else
+-		it->setFlags(!Qt::ItemIsEditable);
++		it->setFlags(it->flags() & (~Qt::ItemIsEditable));
+ 	#endif
+@@
+ #ifdef Q_CC_MSVC
+ 	it->setFlags(it->flags() & (~Qt::ItemIsEditable));
+ #else
+-	it->setFlags(!Qt::ItemIsEditable);
++	it->setFlags(it->flags() & (~Qt::ItemIsEditable));
+ #endif

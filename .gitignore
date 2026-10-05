@@ -21,6 +21,7 @@ Lib/
 DLLs/
 dist/
 stage/
+artifacts/
 logs/
 debug/
 release/
@@ -30,3 +31,21 @@ qt.conf
 qtiplot-portable.cmd
 README-PORTABLE.txt
 .DS_Store
+
+# The upstream source tree uses a directory named src/lib, while the generic
+# Lib/ rule above is intended only for staged Python runtimes.
+!qtiplot/src/lib/
+!qtiplot/src/lib/**
+
+# Restore the vendored Boost preprocessor header under a directory named debug.
+!3rdparty/boost/boost/preprocessor/debug/
+!3rdparty/boost/boost/preprocessor/debug/**
+
+# Build scratch: logs and the patched Qt4 build tree. Keep the required
+# source patches and smoke probes under version control.
+build/*
+!build/patches/
+!build/probes/
+
+# Local agent workspace notes.
+.zcode/

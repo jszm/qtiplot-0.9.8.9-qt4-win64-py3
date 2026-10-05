@@ -1,0 +1,13 @@
+--- a/src/tools/uic/ui4.cpp
++++ b/src/tools/uic/ui4.cpp
+@@
+ void DomWidget::read(QXmlStreamReader &reader)
+ {
+ 
+-    foreach (const QXmlStreamAttribute &attribute, reader.attributes()) {
++    const QXmlStreamAttributes attributes = reader.attributes();
++    for (int attributeIndex = 0; attributeIndex < attributes.size(); ++attributeIndex) {
++        const QXmlStreamAttribute &attribute = attributes.at(attributeIndex);
+         QStringRef name = attribute.name();
+         if (name == QLatin1String("class")) {
+             setAttributeClass(attribute.value().toString());
