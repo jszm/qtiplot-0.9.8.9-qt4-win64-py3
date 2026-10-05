@@ -1,46 +1,101 @@
 # Session Handover - QtiPlot 0.9.8.9 Qt4 Win64 Py3
 
-Last updated: 2026-08-02 (Asia/Tokyo)
+Last updated: 2026-10-05, end of session (host local time)
 
-Workspace:
+Workspace (moved from the Windows A:\ drive to an NVIDIA DGX Spark,
+aarch64 Ubuntu 24.04, X11):
 
 ```text
-A:\projects\qtiplot-0.9.8.9-qt4-win64-py3
+/home/c/projects/qtiplot-0.9.8.9-qt4-win64-py3
 ```
 
 ## Resume Here
 
-The build and portable-package reconstruction are complete. The next task is a
-diagnostic GUI pass focused on responsiveness and plotting, followed by a
-prioritized improvement plan. Do not start changing GUI code until each issue
-has a reproducible sequence and expected-versus-actual behavior.
+Two tracks are underway, both user-approved on 2026-10-05:
 
-Run the canonical portable build from:
+- Track A (native reference): **Milestone 2 is DONE.** QtiPlot 0.9.8.9 now
+  builds and runs natively for aarch64 Linux. Next step is the GUI
+  diagnostic matrix below, run against this native build. Start a fresh
+  milestone-3 list from it; do not change GUI code before each issue has a
+  reproducible sequence and expected-vs-actual behavior.
+- Track B (Lazarus port): spike 0 verified; next milestone per
+  `lazarus-port/PORT-PLAN.md` is M1 (table + CSV + column formulas).
+
+Run the native build (host desktop, X11 session :1):
 
 ```text
-A:\projects\qtiplot-0.9.8.9-qt4-win64-py3\artifacts\portable\qtiplot-0.9.8.9-qt4-win64-py3-portable\qtiplot.exe
+QT=$PWD/build/linux-arm64/Qt-4.8.7-aarch64
+LD_LIBRARY_PATH=$QT/lib:$PWD/build/linux-arm64/runtime-libs \
+QT_PLUGIN_PATH=$QT/plugins DISPLAY=:1 \
+  build/linux-arm64/qtiplot-tree/bin/qtiplot
 ```
 
-No QtiPlot process was running when this handover was written.
+`build/linux-arm64/runtime-libs/` holds libgsl.so.27/libgslcblas.so.0
+extracted from the container image (no sudo on the host); re-extract with
+`docker run --rm -v $PWD/build/linux-arm64/runtime-libs:/out qtiplot-deps:qt4 cp /usr/lib/aarch64-linux-gnu/libgsl.so.27 /usr/lib/aarch64-linux-gnu/libgslcblas.so.0 /out/`.
 
-## Exact Stop Point of the GUI Pass
+Verified 2026-10-05: process alive 20 s, window "QtiPlot - untitled"
+(2560x1440) present on the X server, empty stderr.
 
-The GUI diagnostic was started and then cancelled at the user's request before
-substantive plotting tests:
+Session close state (2026-10-05): this session ended immediately after the
+milestone-2 verification above. Nothing is half-done — no QtiPlot process
+is running, the working tree is clean, and the `qt4env` build container is
+left up on purpose (2 GB cap; `docker rm qt4env` if you need the memory).
+Read this file top to bottom, then pick the next milestone.
 
-1. The portable QtiPlot executable opened successfully with the default
-   two-column table.
-2. Column 1 was selected.
-3. `Table > Set Column Values...` was opened.
-4. Formula `i` was typed, but **Apply was not clicked**.
-5. The test was cancelled. No QtiPlot project or table was saved, and the
-   application is no longer running.
+## Repository and Remote State
 
-No new GUI glitch should be considered confirmed from that partial pass.
+```text
+Branch: main  HEAD: session-close handover commit on top of b163d11b
+        (both pushed to origin/main 2026-10-05; confirm with
+        git log --oneline -3)
+Remote: https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3.git
+```
 
-## Recommended GUI Diagnostic Matrix
+History tip: d78940d3 -> 8f8c6824 (libqti restore) -> 0ce3a6a1 (ISO 8601
+datetime) -> c6b62af7 (docs) -> f0ca1c81 (Lazarus spike) -> 400aab16 (Qt
+aarch64 build) -> b163d11b (native qtiplot build) -> session-close
+handover.
 
-Record the dataset size, exact actions, elapsed delay, expected behavior,
+Working tree is clean. Do not commit or push unless the user explicitly
+asks for it and the exact path list has been reviewed.
+
+## Native aarch64 Build (Track A)
+
+- Qt 4.8.7 installed at `build/linux-arm64/Qt-4.8.7-aarch64/`; reproduce
+  with `build/patches/qt4-aarch64/build-qt.sh` inside a 2GB-capped
+  container (Ubuntu 24.04 + Ubuntu qt4-x11 4.8.7 orig tarball + Debian
+  patch series; gotchas documented in the script comments).
+- QtiPlot: reproduce with `build/patches/qt4-aarch64/build-qtiplot.sh`
+  (same caps). It copies the repo to `build/linux-arm64/qtiplot-tree/`
+  (qmake must not run in the repo itself), purges stale Windows
+  Makefiles/objects, builds vendored muParser, then qmake+make -j2.
+  Container image: `qtiplot-deps:qt4` (qt4env + zlib1g-dev + libgsl-dev).
+- Source changes for the native build are in commit b163d11b: unix
+  sections in `build.conf`, EMF export made Windows-only, Qt4 QBool
+  comparison fixes (GCC 13), GSL 2.x `gsl_multifit_fdfsolver_jac`, and
+  `unix:DESTDIR = ../bin`.
+- Memory discipline: docker `--memory=2g --memory-swap=2g --cpus=4`,
+  `make -j2` (host only has ~5-6 GB available). If a compile is
+  OOM-killed inside the container, retry at -j1.
+- New tools/libraries go in `~/tools` (Lazarus 4.8 + FPC 3.2.2 live
+  there; wine-hangover 11.9 is there for future Windows-exe checks).
+- Python/SIP scripting is deferred on unix; muParser scripting is built.
+
+## Windows Reference (historical)
+
+The Windows toolchain and portable package live on the old A:\ drive and
+are documented in `BUILD-WINDOWS-QT4-PY3.md`. Canonical portable build:
+`artifacts\portable\qtiplot-0.9.8.9-qt4-win64-py3-portable.7z`
+(SHA256 9D1C69007B039D1F4D287B489C0A992A9D42069570E0000E7F3CD45AFA966DE6).
+Required source patches remain:
+`build/patches/qt-4.8.7-uic-widget-attributes.patch` and
+`build/patches/qtiplot-qflags-qt4.patch` (the latter is Windows-specific
+and not needed on unix).
+
+## GUI Diagnostic Matrix (platform-agnostic; run on the native build)
+
+Record dataset size, exact actions, elapsed delay, expected behavior,
 actual behavior, and a screenshot for every confirmed issue.
 
 1. Baseline interaction
@@ -56,133 +111,30 @@ actual behavior, and a screenshot for every confirmed issue.
    - resize the plot MDI window repeatedly from every edge and corner
    - switch rapidly between the table and graph
 4. Responsiveness by data size
-   - small: 1,000 points
-   - medium: 10,000 points
-   - heavy: 100,000 points
-   - note UI freezes, delayed repaints, high CPU, input lag, and cancellation
-     behavior during plot creation and redraw
+   - small: 1,000 points; medium: 10,000; heavy: 100,000
+   - note UI freezes, delayed repaints, high CPU, input lag, and
+     cancellation behavior during plot creation and redraw
 5. Output
    - copy/export a representative graph to PNG, SVG, and PDF if available
    - verify that export does not alter the graph or freeze the application
 
-Start with 2D plotting. Exercise 3D plotting only after the 2D path has a clear
-baseline.
+Start with 2D plotting. Exercise 3D plotting only after the 2D path has a
+clear baseline. The 2026-06-27 MDI table-border resize fix
+(d78940d3) belongs in this regression pass.
 
-## Repository and Remote State
+## Lazarus Port (Track B)
 
-The checkout is detached at the release-fix tag:
-
-```text
-Tag:    v0.9.8.9-qt4-win64-py3-r2
-Commit: d78940d34273501be9280640057bb903fe5052a5
-Remote: https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3.git
-```
-
-On 2026-08-02, a live `git ls-remote` check showed that `origin/main` and the
-remote default `HEAD` both pointed to the same commit. There are no committed
-local changes ahead of the online repository. No files are staged.
-
-The working tree intentionally contains pending reconstruction work:
-
-- modified: `.gitignore`, `BUILD-WINDOWS-QT4-PY3.md`, `build.conf`, and
-  `README.md`
-- untracked: `SESSION_HANDOVER.md`
-- untracked: the restored Boost preprocessor header
-- untracked: two build patches and the embedded-Python smoke probe under
-  `build\`
-- untracked: 42 restored files under `qtiplot\src\lib\`
-
-The checkout has no current branch. Create or switch to an intentional branch
-before any future commit. Do not commit or push unless the user explicitly asks
-for it and the exact path list has been reviewed again.
-
-## Build and Artifact Status
-
-The reproduced executable is 64-bit and uses Qt 4.8.7 plus Python 3.7.9.
-Detailed commands and deviations are in
-[`BUILD-WINDOWS-QT4-PY3.md`](BUILD-WINDOWS-QT4-PY3.md).
-
-Canonical local package:
-
-```text
-artifacts\portable\qtiplot-0.9.8.9-qt4-win64-py3-portable.7z
-SHA256: 9D1C69007B039D1F4D287B489C0A992A9D42069570E0000E7F3CD45AFA966DE6
-Size:   50,489,171 bytes
-```
-
-The portable package was refreshed locally on 2026-08-02 after the Date
-format/parser changes. No commit or push was performed.
-
-Artifact layout:
-
-```text
-artifacts\portable       staged portable folder, 7z, and checksum
-artifacts\source-build   archived generated Makefiles, objects, EXE, and runtime
-artifacts\verification   retained smoke-test marker
-```
-
-`artifacts\` is ignored by Git. The source root was cleaned of generated DLLs,
-Python runtime directories, object files, and Makefiles. Run qmake before
-`mingw32-make` when rebuilding from the cleaned checkout.
-
-The external toolchains remain under:
-
-```text
-A:\toolchains\qtiplot\TDM-GCC-9.2.0
-A:\toolchains\qtiplot\Qt-4.8.7-x64-gcc920
-A:\toolchains\qtiplot\Qt-4.8.7-reference-runtime
-A:\toolchains\qtiplot\Python37-qt4-x64
-C:\Users\c\AppData\Local\Python\pythoncore-3.7-64
-```
-
-## Verified Runtime Evidence
-
-The project-local portable folder passed:
-
-- embedded Python smoke: exit 0
-- GUI startup: stayed alive for six seconds
-- direct executable startup: stayed alive
-- extracted-archive embedded Python smoke: exit 0
-- `7z t` archive integrity check: exit 0
-
-Verified marker:
-
-```text
-python=3.7.9
-pyqt=4.12.3
-qt=4.8.7
-qti_app=True
-```
-
-The marker is retained at:
-
-```text
-artifacts\verification\portable-smoke-20260802-date-refresh\qtiplot-0.9.8.9-qt4-win64-py3-portable\qtiplot_py3_smoke.out
-```
-
-## Reconstruction Details That Must Be Preserved
-
-- The tagged repository omitted `qtiplot\src\lib`; it was restored from the
-  upstream QtiPlot 0.9.8.9 source archive.
-- Missing Boost 1.47 header
-  `3rdparty\boost\boost\preprocessor\debug\error.hpp` was restored.
-- Required source patches are:
-  - `build\patches\qt-4.8.7-uic-widget-attributes.patch`
-  - `build\patches\qtiplot-qflags-qt4.patch`
-- The final runtime uses the reference QtCore/QtGui PyQt4 wrappers with the
-  locally built SIP bridge. The fully local QtCore/QtGui wrappers did not
-  initialize reliably with this legacy stack.
-- Multi-line command-line Python scripts showed legacy `ScriptEdit` behavior;
-  use the one-line probe in `build\probes\qtiplot_py3_smoke.py` for automated
-  runtime verification.
-- The current tagged code already contains the 2026-06-27 MDI table-border
-  resize fix. Include that behavior in the GUI regression pass.
+- `lazarus-port/PORT-PLAN.md` has the milestone list (M0 spike done,
+  M1 next: table + CSV + formulas) and the rule: no port feature without
+  a reference behavior from Track A.
+- Build: `. ~/tools/lazarus-4.8/env.sh && cd lazarus-port &&
+  lazbuild --build-all qtiplot-laz.lpi` (binary at lazarus-port/bin/).
 
 ## Safe Next Actions
 
-1. Read this file and `BUILD-WINDOWS-QT4-PY3.md`.
-2. Recheck `git status --short --branch` and verify the portable artifact hash.
-3. Relaunch the portable executable and complete the GUI diagnostic matrix.
-4. Produce a prioritized list of reproducible glitches before editing code.
-5. If fixes are authorized, implement and test them one issue at a time.
-6. Review the exact commit contents before any commit or push.
+1. Read this file, `.zcode/local-agent-checkpoint.md`, and
+   `lazarus-port/PORT-PLAN.md`.
+2. Recheck `git status --short --branch`.
+3. Track A: run the GUI diagnostic matrix against the native build.
+4. Track B: implement Lazarus M1.
+5. Review the exact commit contents before any commit or push.

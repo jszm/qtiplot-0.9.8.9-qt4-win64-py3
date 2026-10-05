@@ -54,3 +54,4 @@ build/*
 
 # Lazarus build output.
 lazarus-port/bin/
+*.compiled
