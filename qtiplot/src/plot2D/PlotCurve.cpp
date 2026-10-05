@@ -588,8 +588,13 @@ void DataCurve::loadData()
 				X[size] = (double)(size + 1);
 			} else if (xColType == Table::Time)
 				X[size] = Table::fromTime(QTime::fromString(xval.trimmed(), date_time_fmt));
-			  else if (xColType == Table::Date)
-				X[size] = Table::fromDateTime(QDateTime::fromString(xval.trimmed(), date_time_fmt));
+			  else if (xColType == Table::Date){
+				QDateTime dt = Table::parseDateTime(xval, date_time_fmt);
+				if (dt.isValid())
+					X[size] = Table::fromDateTime(dt);
+				else
+					valid_data = false;
+			  }
 			  else
 				X[size] = g->locale().toDouble(xval, &valid_data);
 
@@ -738,9 +743,9 @@ int DataCurve::tableRow(int point)
 	int xColType = d_table->columnType(xcol);
 	if (xColType == Table::Date){
 		QString format = d_table->columnFormat(xcol);
-		QDateTime date0 = QDateTime::fromString (d_table->text(d_start_row, xcol), format);
+		QDateTime date0 = Table::parseDateTime(d_table->text(d_start_row, xcol), format);
 		for (int i = d_start_row; i <= d_end_row; i++ ){
-			QDateTime d = QDateTime::fromString (d_table->text(i, xcol), format);
+			QDateTime d = Table::parseDateTime(d_table->text(i, xcol), format);
 			if (d.isValid()){
 				if (d_type == Graph::HorizontalBars && date0.secsTo(d) == y(point) && d_table->cell(i, ycol) == x(point))
 					return i;

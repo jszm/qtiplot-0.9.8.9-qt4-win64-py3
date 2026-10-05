@@ -1899,7 +1899,7 @@ void Table::sortColumns(const QStringList&s, int type, int order, const QString&
 				strings[non_empty_cells] = d_table->text(j, leadcol);				
 
 				if (columnType(leadcol) == Table::Date || columnType(leadcol) == Table::Time)
-					data_double[non_empty_cells] = fromDateTime(QDateTime::fromString (d_table->text(j, leadcol), format));
+					data_double[non_empty_cells] = fromDateTime(parseDateTime(d_table->text(j, leadcol), format));
 				else if (columnType(leadcol) == Table::Numeric)
 					data_double[non_empty_cells] = cell(j, leadcol);
 
@@ -1946,13 +1946,13 @@ void Table::sortColumns(const QStringList&s, int type, int order, const QString&
 			} else if (type == Date || type == Time){
 				QString format = col_format[col];
 				for (int j = 0; j<non_empty_cells; j++)
-					data_double[j] = fromDateTime(QDateTime::fromString(d_table->text(valid_cell[j], col), format));
+					data_double[j] = fromDateTime(parseDateTime(d_table->text(valid_cell[j], col), format));
 				if(!order)
 					for (int j=0; j<non_empty_cells; j++)
-						d_table->setText(valid_cell[j], col, dateTime(data_double[p[j]]).toString(format));
+						d_table->setText(valid_cell[j], col, formatDateTime(dateTime(data_double[p[j]]), format));
 				else
 					for (int j=0; j<non_empty_cells; j++)
-						d_table->setText(valid_cell[j], col, dateTime(data_double[p[non_empty_cells - j - 1]]).toString(format));
+						d_table->setText(valid_cell[j], col, formatDateTime(dateTime(data_double[p[non_empty_cells - j - 1]]), format));
 			} else if (type == Numeric) {
 				for (int j = 0; j<non_empty_cells; j++)
 					data_double[j] = cell(valid_cell[j], col);
@@ -2003,7 +2003,7 @@ void Table::sortColumn(int col, int order)
 				break;
 				case Table::Date:
 				case Table::Time:
-					r[non_empty_cells] = fromDateTime(QDateTime::fromString(d_table->text(i, col), format));
+					r[non_empty_cells] = fromDateTime(parseDateTime(d_table->text(i, col), format));
 				break;
 				case Table::Numeric:
 					r[non_empty_cells] = cell(i, col);
@@ -2043,10 +2043,10 @@ void Table::sortColumn(int col, int order)
 	} else if (type == Table::Date || type == Table::Time){
 		if (!order) {
 			for (int i=0; i<non_empty_cells; i++)
-				d_table->setText(valid_cell[i], col, dateTime(r[i]).toString(format));
+				d_table->setText(valid_cell[i], col, formatDateTime(dateTime(r[i]), format));
 		 } else {
 			 for (int i=0; i<non_empty_cells; i++)
-				 d_table->setText(valid_cell[i], col, dateTime(r[non_empty_cells-i-1]).toString(format));
+				 d_table->setText(valid_cell[i], col, formatDateTime(dateTime(r[non_empty_cells-i-1]), format));
 		 }
 	} else if (type == Table::Numeric){
 		int prec;
@@ -2128,7 +2128,7 @@ double Table::cell(int row, int col)
 	if (colType == Time)
 		return fromTime(QTime::fromString(d_table->text(row, col).trimmed(), col_format[col].trimmed()));
 	else if (colType == Date)
-		return fromDateTime(QDateTime::fromString(d_table->text(row, col).trimmed(), col_format[col].trimmed()));
+		return fromDateTime(parseDateTime(d_table->text(row, col), col_format[col]));
 
 	return locale().toDouble(d_table->text(row, col));
 }
@@ -2176,7 +2176,7 @@ void Table::saveToMemory()
 				d_saved_cells[col][row] = fromTime(QTime::fromString(d_table->text(row, col).trimmed(), fmt));
 		} else if (colType == Date){
 			for (int row = 0; row < rows; row++)
-				d_saved_cells[col][row] = fromDateTime(QDateTime::fromString(d_table->text(row, col).trimmed(), fmt));
+				d_saved_cells[col][row] = fromDateTime(parseDateTime(d_table->text(row, col), fmt));
 		}
 	}
 
@@ -2277,6 +2277,58 @@ double Table::fromDateTime(const QDateTime& dt)
 	return dt.date().toJulianDay() - 1 + (double)QTime(0, 0).msecsTo(dt.time())/864.0e5;
 }
 
+QString Table::isoDateTimeFormat()
+{
+	// Qt 4's custom date parser has no timezone-offset expression. Keep a
+	// stable column-format marker and use the dedicated ISO parser instead.
+	return "ISO 8601 (automatic)";
+}
+
+QStringList Table::dateTimeFormats()
+{
+	QStringList formats;
+	formats << isoDateTimeFormat();
+	formats << "dd/MM/yyyy";
+	formats << "dd/MM/yyyy HH:mm";
+	formats << "dd/MM/yyyy HH:mm:ss";
+	formats << "dd.MM.yyyy";
+	formats << "dd.MM.yyyy HH:mm";
+	formats << "dd.MM.yyyy HH:mm:ss";
+	formats << "dd MM yyyy";
+	formats << "dd MM yyyy HH:mm";
+	formats << "dd MM yyyy HH:mm:ss";
+	formats << "yyyy-MM-dd";
+	formats << "yyyy-MM-dd HH:mm";
+	formats << "yyyy-MM-dd HH:mm:ss";
+	formats << "yyyy-MM-dd HH:mm:ss.zzz";
+	formats << "yyyyMMdd";
+	formats << "yyyyMMdd HH:mm";
+	formats << "yyyyMMdd HH:mm:ss";
+	return formats;
+}
+
+bool Table::isIsoDateTimeFormat(const QString& format)
+{
+	return format.trimmed() == isoDateTimeFormat();
+}
+
+QDateTime Table::parseDateTime(const QString& text, const QString& format)
+{
+	QString value = text.trimmed();
+	if (isIsoDateTimeFormat(format))
+		return QDateTime::fromString(value, Qt::ISODate);
+	return QDateTime::fromString(value, format.trimmed());
+}
+
+QString Table::formatDateTime(const QDateTime& dt, const QString& format)
+{
+	if (isIsoDateTimeFormat(format))
+		// Table's numeric date representation stores calendar/time fields, not
+		// timezone metadata; use a deterministic ISO representation on rewrite.
+		return dt.toString("yyyy-MM-dd'T'HH:mm:ss.zzz");
+	return dt.toString(format);
+}
+
 double Table::fromTime(const QTime& t)
 {
 	return (double)QTime(0, 0).msecsTo(t)/864.0e5;
@@ -2288,31 +2340,37 @@ bool Table::setDateFormat(const QString& format, int col, bool updateCells)
 		return true;
 
 	bool first_time = false;
+	bool hasData = false;
+	bool hasValidData = false;
 	if (updateCells){
 		for (int i=0; i<d_table->numRows(); i++){
 			QString s = d_table->text(i,col);
 			if (!s.isEmpty()){
-				QDateTime d = QDateTime::fromString (s, format);
+				hasData = true;
+				QDateTime d = parseDateTime(s, format);
 				if (colTypes[col] != Date && d.isValid()){
 				//This might be the first time the user assigns a date format.
 				//If Qt understands the format we break the loop, assign it to the column and return true!
 					first_time = true;
+					hasValidData = true;
 					break;
 				}
 
 				if (d_saved_cells){
 					d = dateTime(d_saved_cells[col][i]);
 					if (d.isValid())
-						d_table->setText(i, col, d.toString(format));
+						d_table->setText(i, col, formatDateTime(d, format));
 				}
 			}
 		}
 	}
+	if (updateCells && colTypes[col] != Date && hasData && !hasValidData)
+		return false;
 	colTypes[col] = Date;
 	col_format[col] = format;
-	if (first_time){//update d_saved_cells in case the user changes the time format before pressing OK in the column dialog
+	if (first_time && d_saved_cells){//update d_saved_cells in case the user changes the time format before pressing OK in the column dialog
 		for (int i = 0; i < d_table->numRows(); i++)
-			d_saved_cells[col][i] = fromDateTime(QDateTime::fromString(d_table->text(i, col), format));
+			d_saved_cells[col][i] = fromDateTime(parseDateTime(d_table->text(i, col), format));
 	}
 	emit modifiedData(this, colName(col));
 	return true;

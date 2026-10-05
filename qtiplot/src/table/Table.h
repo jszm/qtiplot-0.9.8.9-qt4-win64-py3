@@ -33,6 +33,8 @@
 #include <q3header.h>
 #include <QVarLengthArray>
 #include <QLocale>
+#include <QDateTime>
+#include <QStringList>
 
 #include <MdiSubWindow.h>
 #include <ScriptingEnv.h>
@@ -87,6 +89,11 @@ public:
 	static QDateTime dateTime(double val);
 	static double fromDateTime(const QDateTime& dt);
 	static double fromTime(const QTime& t);
+	static QString isoDateTimeFormat();
+	static QStringList dateTimeFormats();
+	static bool isIsoDateTimeFormat(const QString& format);
+	static QDateTime parseDateTime(const QString& text, const QString& format);
+	static QString formatDateTime(const QDateTime& dt, const QString& format);
 
 public slots:
 	MyTable* table(){return d_table;};

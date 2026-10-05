@@ -156,7 +156,7 @@ static int setCellDataHelper(Table* table, int row, int col, PyObject* item) {
                             0/*sipTransferObj*/, 0/*flags*/, 0/*state*/, &isErr));
       if (isErr)
         return 1;
-      table->setText(row, col, dateTime->toString(table->columnFormat(col)));
+      table->setText(row, col, Table::formatDateTime(*dateTime, table->columnFormat(col)));
       delete dateTime;
     }
     else {
@@ -253,7 +253,7 @@ static int cellDataHelper(Table* table, int row, int col, PyObject** item) {
     else {
       if (!PyDateTimeAPI)
         PyDateTime_IMPORT;
-      QDateTime dateTime = QDateTime::fromString(table->text(row, col), table->columnFormat(col));
+      QDateTime dateTime = Table::parseDateTime(table->text(row, col), table->columnFormat(col));
       QDate date = dateTime.date();
       QTime time = dateTime.time();
       *item = PyDateTime_FromDateAndTime(date.year(), date.month(), date.day(),

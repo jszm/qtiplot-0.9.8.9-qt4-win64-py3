@@ -901,8 +901,12 @@ void Graph::setLabelsDateTimeFormat(int axis, int type, const QString& formatInf
 	if (type < ScaleDraw::Time)
 		return;
 
+	QString resolvedFormat = formatInfo;
+	if (type == ScaleDraw::Date && Table::isIsoDateTimeFormat(formatInfo))
+		resolvedFormat = "yyyy-MM-dd'T'HH:mm:ss.zzz";
+
 	ScaleDraw *sd = (ScaleDraw *)axisScaleDraw(axis);
-	if (sd->scaleType() == type && sd->formatString() == formatInfo)
+	if (sd->scaleType() == type && sd->formatString() == resolvedFormat)
 		return;
 
 	ScaleDraw *nsd = 0;
@@ -912,9 +916,9 @@ void Graph::setLabelsDateTimeFormat(int axis, int type, const QString& formatInf
 		nsd = new ScaleDraw(this);
 
 	if (type == ScaleDraw::Time)
-		nsd->setTimeFormat(formatInfo);
+		nsd->setTimeFormat(resolvedFormat);
 	else if (type == ScaleDraw::Date)
-		nsd->setDateFormat(formatInfo);
+		nsd->setDateFormat(resolvedFormat);
 
 	nsd->enableComponent (QwtAbstractScaleDraw::Backbone, drawAxesBackbone);
 	setAxisScaleDraw (axis, nsd);
@@ -928,9 +932,9 @@ void Graph::recoverObsoleteDateTimeScale(int axis, int type, const QString& orig
 	double step = d_user_step[axis];
 	double newStep = 0.0;
 	if (type == ScaleDraw::Date){
-		QDateTime dt = QDateTime::fromString(origin, Qt::ISODate);
+		QDateTime dt = Table::parseDateTime(origin, Table::isoDateTimeFormat());
 		if (dt.isNull())
-			dt = QDateTime::fromString(origin, format);
+			dt = Table::parseDateTime(origin, format);
 		QDateTime sdt = dt.addSecs(int(start));
 		QDateTime edt = dt.addSecs(int(end));
 		if (step != 0.0)
