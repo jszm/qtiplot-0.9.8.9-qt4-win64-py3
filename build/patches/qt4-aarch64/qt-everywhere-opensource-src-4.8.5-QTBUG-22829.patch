@@ -1,0 +1,25 @@
+Description: fix moc in 4.x tripping over BOOST
+Origin: http://pkgs.fedoraproject.org/cgit/qt.git/plain/qt-everywhere-opensource-src-4.8.5-QTBUG-22829.patch?id=e41de7f53a97dd68f1bd13fe64b6d84cf945397a
+Bug: https://bugreports.qt-project.org/browse/QTBUG-22829
+Bug-Debian: http://bugs.debian.org/704045
+Bug-RedHat: https://bugzilla.redhat.com/756395
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/qt4-x11/+bug/1119656
+Applied-Upstream: Qt5 has proper parsing support.
+
+Index: qt4-x11-4.8.7+dfsg/src/tools/moc/main.cpp
+===================================================================
+--- qt4-x11-4.8.7+dfsg.orig/src/tools/moc/main.cpp
++++ qt4-x11-4.8.7+dfsg/src/tools/moc/main.cpp
+@@ -188,8 +188,11 @@ int runMoc(int _argc, char **_argv)
+     pp.macros["Q_MOC_RUN"];
+     pp.macros["__cplusplus"];
+ 
+-    // Workaround a bug while parsing the boost/type_traits/has_operator.hpp header. See QTBUG-22829
++    // Workaround a bugs while parsing some boost headers. See QTBUG-22829 
+     pp.macros["BOOST_TT_HAS_OPERATOR_HPP_INCLUDED"];
++    pp.macros["BOOST_LEXICAL_CAST_INCLUDED"];
++    // ditto for boost 1.60
++    pp.macros["BOOST_TYPE_TRAITS_HPP"];
+ 
+     QByteArray filename;
+     QByteArray output;
