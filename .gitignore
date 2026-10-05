@@ -9,6 +9,8 @@ Makefile.*
 *.pyd
 *.pyc
 *.pyo
+*.ppu
+*.or
 *.dylib
 .*.swp
 .svn/
@@ -49,3 +51,6 @@ build/*
 
 # Local agent workspace notes.
 .zcode/
+
+# Lazarus build output.
+lazarus-port/bin/
