@@ -236,8 +236,13 @@ contains(CONFIG, BrowserPlugin){
 
 TARGET		=	qtiplot
 DESTDIR		=	../
-LIBS		+=	../tmp/qtiplot/libFreeSoftwareQtiPlotExportEMF.a \
-				../tmp/qtiplot/libFreeSoftwareQtiPlotImportOPJ.a
+# on unix the binary name collides with the qtiplot/ source directory
+unix:DESTDIR	=	../bin
+LIBS		+=	../tmp/qtiplot/libFreeSoftwareQtiPlotImportOPJ.a
+# EMF export plugin is Windows-only (see root qtiplot.pro)
+win32:LIBS	+=	../tmp/qtiplot/libFreeSoftwareQtiPlotExportEMF.a
 
-include(src/plugins/exportEMF/exportEMF.pri)
+# the EMF plugin itself only compiles on Windows (emf.h/GDI); on unix the
+# pri's sources would break the app build
+win32:include(src/plugins/exportEMF/exportEMF.pri)
 include(src/plugins/OriginPlugin/OriginPlugin.pri)

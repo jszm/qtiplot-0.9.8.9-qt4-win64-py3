@@ -142,7 +142,9 @@ int main( int argc, char ** argv )
 	Q_IMPORT_PLUGIN(QtiPlotDatabasePlugin);
 #endif
  
- 	Q_IMPORT_PLUGIN(FreeSoftwareQtiPlotExportEMF);
+#ifdef Q_OS_WIN
+	Q_IMPORT_PLUGIN(FreeSoftwareQtiPlotExportEMF);
+#endif
 	Q_IMPORT_PLUGIN(FreeSoftwareQtiPlotImportOPJ);
 
 

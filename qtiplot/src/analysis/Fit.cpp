@@ -128,7 +128,7 @@ gsl_multifit_fdfsolver * Fit::fitGSL(gsl_multifit_function_fdf f, int &iteration
 	}
 
 	if (status){
-	    gsl_multifit_covar (s->J, 0.0, covar);
+	    { gsl_matrix *J = gsl_matrix_alloc (s->fdf->n, s->fdf->p); gsl_multifit_fdfsolver_jac (s, J); gsl_multifit_covar (J, 0.0, covar); gsl_matrix_free (J); }
 	    iterations = 0;
 	    return s;
 	}
@@ -155,7 +155,7 @@ gsl_multifit_fdfsolver * Fit::fitGSL(gsl_multifit_function_fdf f, int &iteration
 		status = gsl_multifit_test_delta (s->dx, s->x, d_tolerance, d_tolerance);
 	} while (inRange && status == GSL_CONTINUE && (int)iter < d_max_iterations);
 
-	gsl_multifit_covar (s->J, 0.0, covar);
+	{ gsl_matrix *J = gsl_matrix_alloc (s->fdf->n, s->fdf->p); gsl_multifit_fdfsolver_jac (s, J); gsl_multifit_covar (J, 0.0, covar); gsl_matrix_free (J); }
 
 	iterations = iter;
 	return s;

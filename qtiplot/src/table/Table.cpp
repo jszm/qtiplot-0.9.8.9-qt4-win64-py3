@@ -1080,7 +1080,7 @@ void Table::setColName(int col, const QString& text, bool enumerateRight, bool w
 		if (enumerateRight)
             newLabel += QString::number(n);
 
-		if (col_label.contains(newLabel) > 0){
+		if (col_label.contains(newLabel)){
 			if (warn){
 				QMessageBox::critical(0, tr("QtiPlot - Error"),
 				tr("There is already a column called : <b>"+newLabel+"</b> in table <b>"+caption+"</b>!<p>Please choose another name!"));

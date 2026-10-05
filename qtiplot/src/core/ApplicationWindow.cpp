@@ -10950,11 +10950,11 @@ QStringList ApplicationWindow::dependingPlots(const QString& name)
 			foreach(Graph *g, layers){
 				QStringList onPlot = g->curveNamesList();
 				onPlot = onPlot.grep (name,TRUE);
-				if (int(onPlot.count()) && plots.contains(w->objectName())<=0)
+				if (int(onPlot.count()) && !plots.contains(w->objectName()))
 					plots << w->objectName();
 			}
 		}else if (w->isA("Graph3D")){
-			if ((((Graph3D*)w)->formula()).contains(name,TRUE) && plots.contains(w->objectName())<=0)
+			if ((((Graph3D*)w)->formula()).contains(name,TRUE) && !plots.contains(w->objectName()))
 				plots << w->objectName();
 		}
 	}
@@ -10971,7 +10971,7 @@ QStringList ApplicationWindow::multilayerDependencies(QWidget *w)
 		for (int j=0; j<onPlot.count(); j++)
 		{
 			QStringList tl = onPlot[j].split("_", QString::SkipEmptyParts);
-			if (tables.contains(tl[0])<=0)
+			if (!tables.contains(tl[0]))
 				tables << tl[0];
 		}
 	}
