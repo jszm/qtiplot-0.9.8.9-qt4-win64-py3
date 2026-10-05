@@ -16,7 +16,9 @@ The local proof build uses:
 - SIP 4.19.25
 - PyQt4 4.12.3
 
-Detailed build notes are in `BUILD-WINDOWS-QT4-PY3.md`.
+Detailed build notes are in [`BUILD-WINDOWS-QT4-PY3.md`](BUILD-WINDOWS-QT4-PY3.md).
+The canonical current status and restart instructions are in
+[`SESSION_HANDOVER.md`](SESSION_HANDOVER.md).
 
 ## Portable Package
 
@@ -38,10 +40,17 @@ Current resize-fix refresh:
 https://github.com/jszm/qtiplot-0.9.8.9-qt4-win64-py3/releases/tag/v0.9.8.9-qt4-win64-py3-r2
 ```
 
-After building `qtiplot.exe`, regenerate the portable folder and archive with:
+After building `qtiplot.exe`, regenerate the project-local portable folder and
+archive with:
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File tools\make_qt4_x64_py3_portable.ps1 -InstallRuntimeToSource
+$src='A:\projects\qtiplot-0.9.8.9-qt4-win64-py3'
+$qtRuntime='A:\toolchains\qtiplot\Qt-4.8.7-reference-runtime'
+$py37root='C:\Users\c\AppData\Local\Python\pythoncore-3.7-64'
+$prefix='A:\toolchains\qtiplot\Python37-qt4-x64'
+powershell -NoProfile -ExecutionPolicy Bypass -File tools\make_qt4_x64_py3_portable.ps1 `
+  -QtDir $qtRuntime -PythonRoot $py37root -PyQtPrefix $prefix `
+  -OutRoot (Join-Path $src 'artifacts\portable')
 ```
 
 The portable package stages the Qt4 DLLs, Python 3.7 runtime, PyQt4/SIP runtime,
@@ -50,19 +59,19 @@ manual, translations, and fit plugins beside the application.
 Current local refresh:
 
 ```text
-SHA256: 4121BE8266BB24211EA2467F90E05403F071A456813F3036D73C85D773DC34B2
-Size:   33,083,269 bytes
+artifacts\portable\qtiplot-0.9.8.9-qt4-win64-py3-portable.7z
+SHA256: 9D1C69007B039D1F4D287B489C0A992A9D42069570E0000E7F3CD45AFA966DE6
+Size:   50,489,171 bytes
 ```
 
 ## Status
 
-The local proof build passed these clean-environment checks:
+The project-local portable build passed these clean-environment checks:
 
-- plain `qtiplot.exe` startup from the source build folder
 - plain `qtiplot.exe` startup from the portable folder
-- embedded Python smoke from the source build folder
 - embedded Python smoke from the portable folder
 - embedded Python smoke after extracting the 7z archive
+- `7z t` archive integrity check
 - MDI table border resize after CSV import
 
 Verified Python marker:
@@ -77,6 +86,10 @@ qti_app=True
 The 2026-06-27 refresh fixes a Qt4 MDI edge hit-test regression where table
 windows could be moved and programmatically resized but not resized by dragging
 the window border.
+
+A broader GUI diagnostic focused on responsiveness and plotting is the next
+planned task. It was started but cancelled before any glitch was confirmed; the
+exact restart point and test matrix are recorded in `SESSION_HANDOVER.md`.
 
 ## License
 
